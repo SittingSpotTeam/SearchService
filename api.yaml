@@ -4,7 +4,7 @@ info:
   description: Manages the logic on fulfilling a query for sitting spots.
   version: 1.0.0
 servers:
-  - url: https://search-logic/api/v3
+  - url: https://search-logic/api/v1
 paths:
   /:
     get:
