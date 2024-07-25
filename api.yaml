@@ -12,13 +12,6 @@ paths:
       description: Tries to short circuit the query using query optimizer, otherwise search the adapter
       operationId: performQuery
       parameters:
-        - name: queryId
-          in: query
-          description: unique id of the query
-          required: true
-          schema:
-            type: string
-            format: uuid
         - name: location
           in: query
           description: General position of the search

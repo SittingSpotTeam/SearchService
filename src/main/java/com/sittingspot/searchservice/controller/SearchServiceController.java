@@ -36,15 +36,14 @@ public class SearchServiceController {
     private String searchAdapterApiVersion;
 
     @GetMapping("/")
-    public List<QueryResult> search(@RequestParam("queryId")UUID queryID,
-                                    @RequestParam("location") Area location,
+    public List<QueryResult> search(@RequestParam("location") Area location,
                                     @RequestParam(value = "tags",required = false) List<Tag> tags,
                                     @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
 
         var optimizeRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://" + queryOptimizerUrl + queryOptimizerApiVersion +
-                        "/?queryId="+queryID +"&location="+location+"&tags="+tags+"&labels="+labels))
+                        "/?location="+location+"&tags="+tags+"&labels="+labels))
                 .GET().build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
 
