@@ -20,20 +20,20 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.UUID;
 
-@RestController("search-logic/api/v1")
+@RestController("/api/v1")
 public class SearchServiceController {
 
-    @Value("${sittingspot.queryoptimizer.host}")
-    private String queryOptimizerHost;
+    @Value("${sittingspot.queryoptimizer.url}")
+    private String queryOptimizerUrl;
 
-    @Value("${sittingspot.queryoptimizer.port}")
-    private String queryOptimizerPort;
+    @Value("${sittingspot.queryoptimizer.api.version}")
+    private String queryOptimizerApiVersion;
 
-    @Value("${sittingspot.searchadapter.host}")
-    private String searchAdapterHost;
+    @Value("${sittingspot.searchadapter.url}")
+    private String searchAdapterUrl;
 
-    @Value("${sittingspot.searchadapter.port}")
-    private String searchAdapterPort;
+    @Value("${sittingspot.searchadapter.api.version}")
+    private String searchAdapterApiVersion;
 
     @GetMapping("/")
     public List<QueryResult> search(@RequestParam("queryId")UUID queryID,
@@ -43,7 +43,7 @@ public class SearchServiceController {
         var client = HttpClient.newHttpClient();
 
         var optimizeRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://" + queryOptimizerHost + ":" + queryOptimizerPort +
+                .uri(URI.create("http://" + queryOptimizerUrl + queryOptimizerApiVersion +
                         "/?queryId="+queryID +"&location="+location+"&tags="+tags+"&labels="+labels))
                 .GET().build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
@@ -54,7 +54,7 @@ public class SearchServiceController {
         }
 
         var searchRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://"+ searchAdapterHost + ":" + searchAdapterPort +
+                .uri(URI.create("http://"+ searchAdapterUrl + searchAdapterApiVersion +
                         "/?location="+location+"&tags="+tags+"&labels="+labels))
                 .GET()
                 .build();

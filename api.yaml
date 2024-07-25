@@ -76,6 +76,5 @@ components:
       properties:
         spotId:
           type: string
-          format: uuid
         location:
           $ref: '#/components/schemas/Location'
