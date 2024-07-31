@@ -41,6 +41,8 @@ public class SearchServiceController {
                                     @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
 
+        // first forward the request to the query optimizer
+        // if it's possible to answer the query without invoking the adapter it does so.
         var optimizeRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://" + queryOptimizerUrl + queryOptimizerApiVersion +
                         "/?location="+location+"&tags="+tags+"&labels="+labels))
@@ -52,6 +54,8 @@ public class SearchServiceController {
             return data;
         }
 
+        // as the optimizer didn't have enough past query data to answer the current query
+        // it forwoards it to the adapter.
         var searchRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://"+ searchAdapterUrl + searchAdapterApiVersion +
                         "/?location="+location+"&tags="+tags+"&labels="+labels))
