@@ -25,15 +25,8 @@ public class SearchServiceController {
 
     @Value("${sittingspot.queryoptimizer.url}")
     private String queryOptimizerUrl;
-
-    @Value("${sittingspot.queryoptimizer.api.version}")
-    private String queryOptimizerApiVersion;
-
     @Value("${sittingspot.searchadapter.url}")
     private String searchAdapterUrl;
-
-    @Value("${sittingspot.searchadapter.api.version}")
-    private String searchAdapterApiVersion;
 
     @GetMapping("/")
     public List<QueryResult> search(@RequestParam("location") Area location,
@@ -44,7 +37,7 @@ public class SearchServiceController {
         // first forward the request to the query optimizer
         // if it's possible to answer the query without invoking the adapter it does so.
         var optimizeRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://" + queryOptimizerUrl + queryOptimizerApiVersion +
+                .uri(URI.create("http://" + queryOptimizerUrl +
                         "/?location="+location+"&tags="+tags+"&labels="+labels))
                 .GET().build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
@@ -57,7 +50,7 @@ public class SearchServiceController {
         // as the optimizer didn't have enough past query data to answer the current query
         // it forwoards it to the adapter.
         var searchRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://"+ searchAdapterUrl + searchAdapterApiVersion +
+                .uri(URI.create("http://"+ searchAdapterUrl +
                         "/?location="+location+"&tags="+tags+"&labels="+labels))
                 .GET()
                 .build();
