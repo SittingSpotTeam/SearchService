@@ -29,7 +29,9 @@ public class SearchServiceController {
     private String searchAdapterUrl;
 
     @GetMapping("/")
-    public List<QueryResult> search(@RequestParam("location") Area location,
+    public List<QueryResult> search(@RequestParam("x") Double x,
+                                    @RequestParam("y") Double y,
+                                    @RequestParam("area") Double area,
                                     @RequestParam(value = "tags",required = false) List<Tag> tags,
                                     @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
@@ -38,7 +40,7 @@ public class SearchServiceController {
         // if it's possible to answer the query without invoking the adapter it does so.
         var optimizeRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://" + queryOptimizerUrl +
-                        "/?location="+location+"&tags="+tags+"&labels="+labels))
+                        "/?x="+x+"&y="+y+"&area="+area+"&tags="+tags+"&labels="+labels))
                 .GET().build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
 
@@ -51,7 +53,7 @@ public class SearchServiceController {
         // it forwoards it to the adapter.
         var searchRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://"+ searchAdapterUrl +
-                        "/?location="+location+"&tags="+tags+"&labels="+labels))
+                        "/?x="+x+"&y="+y+"&area="+area+"&tags="+tags+"&labels="+labels))
                 .GET()
                 .build();
         var searchResult = client.send(searchRequest, HttpResponse.BodyHandlers.ofString());
