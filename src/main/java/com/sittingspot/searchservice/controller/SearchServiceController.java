@@ -9,12 +9,14 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -22,7 +24,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Log4j2
-@RestController("/api/v1")
+@RestController
+@RequestMapping("/api/v1")
 public class SearchServiceController {
 
     @Value("${sittingspot.queryoptimizer.url}")
@@ -30,20 +33,20 @@ public class SearchServiceController {
     @Value("${sittingspot.searchadapter.url}")
     private String searchAdapterUrl;
 
-    @GetMapping("/")
-    public List<QueryResult> search(@RequestParam("x") Double x,
-                                    @RequestParam("y") Double y,
-                                    @RequestParam("area") Double area,
-                                    @RequestParam(value = "tags",required = false) List<Tag> tags,
-                                    @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
+    @GetMapping
+    public List<QueryResult> searchSpot(@RequestParam("x") Double x,
+                                        @RequestParam("y") Double y,
+                                        @RequestParam("area") Double area,
+                                        @RequestParam(value = "tags",required = false) List<Tag> tags,
+                                        @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
 
         var queryOptimizerRequestUrl = "http://" + queryOptimizerUrl + "?x=" + x + "&y=" + y + "&area="+area;
         if(tags != null){
-            queryOptimizerRequestUrl += "&tags="+tags;
+            queryOptimizerRequestUrl += URLEncoder.encode("&tags="+tags,"UTF-8");
         }
         if(labels != null){
-            queryOptimizerRequestUrl += "&labels="+labels;
+            queryOptimizerRequestUrl += URLEncoder.encode("&labels="+labels,"UTF-8");
         }
 
         log.info("Sending request: " + queryOptimizerRequestUrl);
@@ -51,7 +54,8 @@ public class SearchServiceController {
         // if it's possible to answer the query without invoking the adapter it does so.
         var optimizeRequest = HttpRequest.newBuilder()
                 .uri(URI.create(queryOptimizerRequestUrl))
-                .GET().build();
+                .header("Content-Type", "application/json")
+                .build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
 
         log.info("Got response code " + optimizeResult.statusCode());
@@ -62,10 +66,10 @@ public class SearchServiceController {
 
         var searchAdapterRequestUrl = "http://" + searchAdapterUrl + "?x=" + x + "&y=" + y + "&area="+area;
         if(tags != null){
-            searchAdapterRequestUrl += "&tags="+tags;
+            searchAdapterRequestUrl += URLEncoder.encode("&tags="+tags,"UTF-8");
         }
         if(labels != null){
-            searchAdapterRequestUrl += "&labels="+labels;
+            searchAdapterRequestUrl +=  URLEncoder.encode("&labels="+labels,"UTF-8");
         }
 
         log.info("Sending request: " + searchAdapterRequestUrl);
@@ -73,6 +77,7 @@ public class SearchServiceController {
         // it forwoards it to the adapter.
         var searchRequest = HttpRequest.newBuilder()
                 .uri(URI.create(searchAdapterRequestUrl))
+                .header("Content-Type", "application/json")
                 .GET()
                 .build();
         var searchResult = client.send(searchRequest, HttpResponse.BodyHandlers.ofString());

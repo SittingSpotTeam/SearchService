@@ -1,1 +1,1 @@
-docker build . -t sittingspotapp/searchservice:1.2-dev && docker push sittingspotapp/searchservice:1.2-dev
+docker build . -t sittingspotapp/searchservice:1.3-dev && docker push sittingspotapp/searchservice:1.3-dev
