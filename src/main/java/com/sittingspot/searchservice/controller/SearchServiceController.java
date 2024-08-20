@@ -5,6 +5,7 @@ import com.sittingspot.searchservice.model.Area;
 import com.sittingspot.searchservice.model.Location;
 import com.sittingspot.searchservice.model.QueryResult;
 import com.sittingspot.searchservice.model.Tag;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.UUID;
 
+@Log4j2
 @RestController("/api/v1")
 public class SearchServiceController {
 
@@ -36,28 +38,46 @@ public class SearchServiceController {
                                     @RequestParam(value = "labels",required = false) List<String> labels) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
 
+        var queryOptimizerRequestUrl = "http://" + queryOptimizerUrl + "?x=" + x + "&y=" + y + "&area="+area;
+        if(tags != null){
+            queryOptimizerRequestUrl += "&tags="+tags;
+        }
+        if(labels != null){
+            queryOptimizerRequestUrl += "&labels="+labels;
+        }
+
+        log.info("Sending request: " + queryOptimizerRequestUrl);
         // first forward the request to the query optimizer
         // if it's possible to answer the query without invoking the adapter it does so.
         var optimizeRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://" + queryOptimizerUrl +
-                        "/?x="+x+"&y="+y+"&area="+area+"&tags="+tags+"&labels="+labels))
+                .uri(URI.create(queryOptimizerRequestUrl))
                 .GET().build();
         var optimizeResult = client.send(optimizeRequest, HttpResponse.BodyHandlers.ofString());
 
+        log.info("Got response code " + optimizeResult.statusCode());
         if (optimizeResult.statusCode() == 200) {
             List<QueryResult> data = (new ObjectMapper()).readerForListOf(QueryResult.class).readValue(optimizeResult.body());
             return data;
         }
 
+        var searchAdapterRequestUrl = "http://" + searchAdapterUrl + "?x=" + x + "&y=" + y + "&area="+area;
+        if(tags != null){
+            searchAdapterRequestUrl += "&tags="+tags;
+        }
+        if(labels != null){
+            searchAdapterRequestUrl += "&labels="+labels;
+        }
+
+        log.info("Sending request: " + searchAdapterRequestUrl);
         // as the optimizer didn't have enough past query data to answer the current query
         // it forwoards it to the adapter.
         var searchRequest = HttpRequest.newBuilder()
-                .uri(URI.create("http://"+ searchAdapterUrl +
-                        "/?x="+x+"&y="+y+"&area="+area+"&tags="+tags+"&labels="+labels))
+                .uri(URI.create(searchAdapterRequestUrl))
                 .GET()
                 .build();
         var searchResult = client.send(searchRequest, HttpResponse.BodyHandlers.ofString());
 
+        log.info("Got response code " + searchResult.statusCode());
         if (searchResult.statusCode() != 200) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
         }
